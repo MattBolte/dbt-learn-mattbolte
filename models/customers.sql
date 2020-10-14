@@ -26,12 +26,14 @@ customer_orders as (
     group by 1
 ),
 
-customer_payments as (
+customer_successful_payments as (
     select 
         customer_id,
         sum(amount) as amount
     from orders 
     JOIN payments on orders.order_id = payments.order_id
+    where payments.status = 'success'
+    and orders.status = 'success'
     GROUP BY 1
 ),
 
@@ -44,10 +46,10 @@ final as (
         customer_orders.first_order_date,
         customer_orders.most_recent_order_date,
         coalesce(customer_orders.number_of_orders, 0) as number_of_orders,
-        coalesce(customer_payments.amount,0) as total_payment_amount
+        coalesce(customer_successful_payments.amount,0) as total_payment_amount
     from customers
     left join customer_orders using (customer_id)
-    left join customer_payments using (customer_id)
+    left join customer_successful_payments using (customer_id)
 )
 
 select * from final
